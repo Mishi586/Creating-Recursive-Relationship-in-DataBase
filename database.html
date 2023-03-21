@@ -1,0 +1,84 @@
+// First Creating Recursive Realtionship in database
+ SELECT category_id, category_name, parent_category_id
+FROM categories;
+WITH RECURSIVE category_tree (category_id, category_name, parent_category_id, depth, path) AS (
+  SELECT category_id, category_name, parent_category_id, 1, CAST(category_id AS VARCHAR(255))
+  FROM categories
+  WHERE parent_category_id IS NULL
+
+  UNION ALL
+
+  SELECT c.category_id, c.category_name, c.parent_category_id, ct.depth + 1, CONCAT(ct.path, ' > ', c.category_id)
+  FROM categories c
+  JOIN category_tree ct ON c.parent_category_id = ct.category_id
+)
+SELECT category_id, category_name, parent_category_id, depth, path
+FROM category_tree
+ORDER BY path;
+
+
+// Now inserting data into categories table
+INSERT INTO categories (category_id, category_name, parent_category_id)
+VALUES (1, 'Books', NULL);
+
+INSERT INTO categories (category_id, category_name, parent_category_id)
+VALUES (2, 'Electronics', NULL);
+
+INSERT INTO categories (category_id, category_name, parent_category_id)
+VALUES (3, 'Clothing', NULL);
+
+-- Insert subcategories under Books
+INSERT INTO categories (category_id, category_name, parent_category_id)
+VALUES (4, 'Fiction', 1);
+
+INSERT INTO categories (category_id, category_name, parent_category_id)
+VALUES (5, 'Non-fiction', 1);
+
+INSERT INTO categories (category_id, category_name, parent_category_id)
+VALUES (6, 'Mystery', 4);
+
+INSERT INTO categories (category_id, category_name, parent_category_id)
+VALUES (7, 'Science fiction', 4);
+
+INSERT INTO categories (category_id, category_name, parent_category_id)
+VALUES (8, 'Biography', 5);
+
+INSERT INTO categories (category_id, category_name, parent_category_id)
+VALUES (9, 'History', 5);
+
+-- Insert subcategories under Electronics
+INSERT INTO categories (category_id, category_name, parent_category_id)
+VALUES (10, 'Computers', 2);
+
+INSERT INTO categories (category_id, category_name, parent_category_id)
+VALUES (11, 'TVs', 2);
+
+//PHP Code
+// Connect to the database
+$servername = "localhost";
+$username = "your_username";
+$password = "your_password";
+$dbname = "your_database";
+$conn = new mysqli($servername, $username, $password, $dbname);
+
+// Check for errors
+if ($conn->connect_error) {
+  die("Connection failed: " . $conn->connect_error);
+}
+
+// Create the categories table
+$sql = "CREATE TABLE categories (
+  category_id INT(11) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  category_name VARCHAR(255) NOT NULL,
+  parent_category_id INT(11) UNSIGNED DEFAULT NULL,
+  FOREIGN KEY (parent_category_id) REFERENCES categories(category_id)
+)";
+
+if ($conn->query($sql) === TRUE) {
+  echo "Categories table created successfully";
+} else {
+  echo "Error creating categories table: " . $conn->error;
+}
+
+// Close the database connection
+$conn->close();
